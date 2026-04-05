@@ -1,11 +1,5 @@
-.venv/
-venv/
-__pycache__/
-*.py[cod]
-.pytest_cache/
 .DS_Store
+__pycache__/
 *.db
 *.db-wal
 *.db-shm
-.env
-.streamlit/secrets.toml
