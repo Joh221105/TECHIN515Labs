@@ -1,0 +1,11 @@
+# ProcureGIX — University of Washington–inspired theme (purple & gold)
+#
+# Palette constants also live in procuregix/ui/uw_theme.py for custom CSS.
+
+[theme]
+base = "light"
+primaryColor = "#4B2E83"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F5F0FA"
+textColor = "#2A1F3D"
+font = "sans serif"

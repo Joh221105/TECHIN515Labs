@@ -1,0 +1,1 @@
+"""ProcureGIX Streamlit application package."""
