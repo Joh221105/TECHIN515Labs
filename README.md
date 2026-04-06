@@ -2,9 +2,9 @@
 
 Course lab work for TECHIN515.
 
-## Lab 1 — ProcureGIX
+## Lab 1
 
-The **ProcureGIX** Streamlit app lives in **[`Lab 1/`](./Lab%201/README.md)**. Open that folder for the full guide.
+**[`Lab 1/`](./Lab%201/README.md)** has two Streamlit apps: **ProcureGIX** and **Wayfinder**. See that README for full documentation.
 
 **Quick start** (from the repository root):
 
@@ -13,7 +13,9 @@ cd "Lab 1"
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-streamlit run app.py
+streamlit run app.py              # ProcureGIX
+# or:
+cd Wayfinder && streamlit run app.py   # Wayfinder
 ```
 
 If imports fail for **pandas**: `pip install pandas`.

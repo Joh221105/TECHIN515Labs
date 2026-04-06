@@ -1,3 +1,16 @@
+# Lab 1
+
+This folder contains two Streamlit apps:
+
+| App | How to run | Notes |
+|-----|------------|--------|
+| **ProcureGIX** | `cd "Lab 1"` then `streamlit run app.py` | Uses `procuregix/`, `db.py`, and `Lab 1/.streamlit/`. |
+| **Wayfinder** | `cd "Lab 1/Wayfinder"` then `streamlit run app.py` | Separate app; theme lives in `Wayfinder/.streamlit/` (Streamlit reads config from your **current working directory**). |
+
+You can use **one** virtualenv for both apps (`python3 -m venv .venv` in `Lab 1`, then `pip install -r requirements.txt`). Activate it before running either app.
+
+---
+
 # ProcureGIX
 
 **ProcureGIX** is a Streamlit web app for **UW MSTI**–style **purchase requests**. Students submit order line items by class and team; instructors approve or reject them; program staff use the admin area for terms, exports, and instructor accounts. Data lives in a local **SQLite** database.
@@ -130,7 +143,8 @@ All paths are under **`Lab 1/`** in the repository.
 
 | Path | Role |
 |------|------|
-| `Lab 1/app.py` | Streamlit entry + page config |
+| `Lab 1/Wayfinder/app.py` | **Wayfinder** Streamlit entry (run from `Lab 1/Wayfinder`) |
+| `Lab 1/app.py` | **ProcureGIX** Streamlit entry + page config |
 | `Lab 1/db.py` | SQLite connection, schema, all data access |
 | `Lab 1/procuregix/main.py` | Role routing, `init_db()` on each run |
 | `Lab 1/procuregix/ui/student/` | Login, dashboard, orders, sidebar |
