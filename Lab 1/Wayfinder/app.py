@@ -4,7 +4,14 @@ Wayfinder — GIX campus resource finder (Streamlit app).
 
 from __future__ import annotations
 
+import hashlib
+import html
+import textwrap
+
+import pandas as pd
 import streamlit as st
+
+from search_heading import render_search_results_heading
 
 st.set_page_config(
     page_title="Wayfinder",
@@ -12,11 +19,126 @@ st.set_page_config(
     layout="wide",
 )
 
+_UW_PURPLE = "#4B2E83"
+_UW_PURPLE_SOFT = "rgba(75, 46, 131, 0.12)"
+_UW_TEXT = "#2A1F3D"
+
+
+def _inject_wayfinder_styles() -> None:
+    st.markdown(
+        textwrap.dedent(
+            f"""
+            <style>
+              .block-container {{
+                padding-top: 1.25rem;
+                padding-bottom: 3rem;
+                max-width: 960px;
+              }}
+              .wf-hero {{
+                background: linear-gradient(135deg, {_UW_PURPLE} 0%, #6b4ba3 55%, #8b6bbd 100%);
+                color: #fff;
+                border-radius: 16px;
+                padding: 1.75rem 1.5rem 1.5rem;
+                margin-bottom: 1.25rem;
+                box-shadow: 0 8px 28px rgba(75, 46, 131, 0.25);
+              }}
+              .wf-hero h1 {{
+                margin: 0 0 0.35rem 0;
+                font-size: 2rem;
+                font-weight: 700;
+                letter-spacing: -0.02em;
+                line-height: 1.15;
+                display: flex;
+                align-items: center;
+                gap: 0.45rem;
+              }}
+              .wf-hero p {{
+                margin: 0;
+                opacity: 0.92;
+                font-size: 1.05rem;
+                line-height: 1.45;
+              }}
+              .wf-metrics [data-testid="stMetricValue"] {{
+                font-size: 1.65rem;
+              }}
+              div[data-testid="stVerticalBlockBorderWrapper"] {{
+                border-radius: 14px !important;
+                border: 1px solid rgba(75, 46, 131, 0.14) !important;
+                background: linear-gradient(180deg, #ffffff 0%, #faf8fc 100%);
+                box-shadow: 0 4px 18px rgba(42, 31, 61, 0.06);
+                padding: 0.35rem 0.5rem 0.65rem;
+              }}
+              .wf-cat {{
+                display: inline-block;
+                font-size: 0.72rem;
+                font-weight: 700;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                color: {_UW_PURPLE};
+                background: {_UW_PURPLE_SOFT};
+                padding: 0.25rem 0.7rem;
+                border-radius: 999px;
+                margin-bottom: 0.4rem;
+              }}
+              .wf-loc {{
+                color: #5c4d6e;
+                font-size: 0.95rem;
+                line-height: 1.45;
+                margin: 0.15rem 0 0.6rem 0;
+              }}
+              .wf-desc {{
+                color: {_UW_TEXT};
+                font-size: 1rem;
+                line-height: 1.55;
+                margin: 0 0 0.75rem 0;
+              }}
+              .wf-tags {{
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.35rem;
+                margin: 0 0 0.5rem 0;
+              }}
+              .wf-tag {{
+                font-size: 0.78rem;
+                font-weight: 500;
+                color: #4a3f5c;
+                background: #ede8f4;
+                border: 1px solid rgba(75, 46, 131, 0.12);
+                padding: 0.15rem 0.55rem;
+                border-radius: 999px;
+              }}
+              .wf-map-cap {{
+                font-size: 0.85rem;
+                color: #5c4d6e;
+                margin: 0.25rem 0 0.35rem 0;
+              }}
+              .wf-footer {{
+                margin-top: 2rem;
+                padding-top: 1rem;
+                border-top: 1px solid rgba(75, 46, 131, 0.12);
+                color: #6e627d;
+                font-size: 0.85rem;
+              }}
+              [data-testid="stMetric"] {{
+                background: linear-gradient(180deg, #faf8fc 0%, #f3eef9 100%);
+                border: 1px solid rgba(75, 46, 131, 0.12);
+                border-radius: 12px;
+                padding: 0.55rem 0.75rem;
+              }}
+            </style>
+            """
+        ),
+        unsafe_allow_html=True,
+    )
+
 RESOURCE_KEYS: frozenset[str] = frozenset(
     {
         "name",
         "category",
         "location",
+        # Illustrative coordinates (fictional placement around the GIX building footprint).
+        "lat",
+        "lon",
         "hours",
         "access",
         "description",
@@ -37,6 +159,8 @@ RESOURCES: list[dict[str, object]] = [
         "tags": ["3d-printing", "laser", "electronics", "prototyping", "training"],
         "cost": "Included for enrolled students; specialty materials billed at cost",
         "contact": "makerspace@gix.uw.edu",
+        "lat": 47.6197,
+        "lon": -122.18545,
     },
     {
         "name": "Indoor bike storage",
@@ -48,6 +172,8 @@ RESOURCES: list[dict[str, object]] = [
         "tags": ["bike", "commuter", "storage", "sustainability"],
         "cost": "Free",
         "contact": None,
+        "lat": 47.61958,
+        "lon": -122.18515,
     },
     {
         "name": "Student free printing",
@@ -59,6 +185,8 @@ RESOURCES: list[dict[str, object]] = [
         "tags": ["printing", "coursework", "netid"],
         "cost": "Free within fair-use quota; overages routed to department billing",
         "contact": "ithelp@gix.uw.edu",
+        "lat": 47.61968,
+        "lon": -122.18528,
     },
     {
         "name": "Quiet study room",
@@ -70,6 +198,8 @@ RESOURCES: list[dict[str, object]] = [
         "tags": ["quiet", "focus", "reservation", "interviews"],
         "cost": "Free",
         "contact": None,
+        "lat": 47.61978,
+        "lon": -122.1855,
     },
     {
         "name": "Collaborative studio",
@@ -81,6 +211,8 @@ RESOURCES: list[dict[str, object]] = [
         "tags": ["teamwork", "whiteboards", "design", "sprint"],
         "cost": "Free",
         "contact": "frontdesk@gix.uw.edu",
+        "lat": 47.61965,
+        "lon": -122.18532,
     },
     {
         "name": "Graduate student lounge",
@@ -92,6 +224,8 @@ RESOURCES: list[dict[str, object]] = [
         "tags": ["lounge", "kitchen", "community", "msti"],
         "cost": "Free; coffee contributions optional",
         "contact": None,
+        "lat": 47.61982,
+        "lon": -122.18538,
     },
     {
         "name": "IT help desk",
@@ -103,6 +237,8 @@ RESOURCES: list[dict[str, object]] = [
         "tags": ["wifi", "laptop", "av", "support", "tickets"],
         "cost": "Free for supported devices; replacement parts at UW rates",
         "contact": "ithelp@gix.uw.edu",
+        "lat": 47.6196,
+        "lon": -122.18522,
     },
     {
         "name": "Career services (GIX)",
@@ -114,6 +250,8 @@ RESOURCES: list[dict[str, object]] = [
         "tags": ["jobs", "interviews", "handshake", "recruiting"],
         "cost": "Free for enrolled students",
         "contact": "gixcareers@uw.edu",
+        "lat": 47.61963,
+        "lon": -122.18518,
     },
 ]
 
@@ -125,6 +263,8 @@ for _resource in RESOURCES:
     assert isinstance(_tags, list) and all(isinstance(t, str) for t in _tags)
     _contact = _resource["contact"]
     assert _contact is None or isinstance(_contact, str)
+    assert isinstance(_resource["lat"], (int, float))
+    assert isinstance(_resource["lon"], (int, float))
 
 _CATEGORY_OPTIONS: list[str] = ["All"] + sorted(
     {str(r["category"]) for r in RESOURCES}
@@ -166,13 +306,43 @@ def search_resources(query: str, category: str) -> list[dict]:
     return [r for r in RESOURCES if category_ok(r) and keyword_ok(r)]
 
 
+def _resource_map_widget_key(resource: dict[str, object]) -> str:
+    """Stable key for per-resource map widgets (checkbox + optional future controls)."""
+    digest = hashlib.sha256(str(resource["name"]).encode("utf-8")).hexdigest()[:16]
+    return f"wf_map_chk_{digest}"
+
+
+def _render_resource_map(resource: dict[str, object]) -> None:
+    """Single-point map using ``st.map`` only (no pydeck). ``size`` is radius in meters — keep small for a dot, not a blob."""
+    lat = float(resource["lat"])
+    lon = float(resource["lon"])
+    df = pd.DataFrame({"lat": [lat], "lon": [lon]})
+    st.markdown(
+        '<p class="wf-map-cap">📍 Approximate location (illustrative map — not for navigation)</p>',
+        unsafe_allow_html=True,
+    )
+    st.map(
+        df,
+        zoom=18,
+        use_container_width=True,
+        height=260,
+        size=2,
+        color="#4B2E83",
+    )
+
+
 def main() -> None:
+    _inject_wayfinder_styles()
+
     with st.sidebar:
-        st.header("Find resources")
+        st.markdown("### Filters")
+        st.caption("Search and category apply to the list. Maps load only when you opt in per card.")
+        st.divider()
         keyword = st.text_input(
-            "Keyword search",
+            "Keyword",
             placeholder="e.g. printing, wifi, lounge…",
-            help="Matches name, description, category, and tags.",
+            help="Matches name, description, category, and tags. "
+            "Streamlit reruns when you leave this field or press Enter (not on every keystroke).",
         )
         category = st.selectbox(
             "Category",
@@ -182,37 +352,75 @@ def main() -> None:
 
     results = search_resources(keyword, category)
 
-    st.title("Wayfinder")
-    st.caption("GIX campus resource finder")
+    render_search_results_heading(results, loading=False)
 
-    st.metric(label="Results found", value=len(results))
+    st.markdown(
+        """
+        <div class="wf-hero">
+          <h1><span aria-hidden="true">🧭</span> Wayfinder</h1>
+          <p>GIX campus resource finder — browse services, spaces, and support in one place.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.metric("Resources in catalog", len(RESOURCES))
+
+    st.divider()
 
     if not results:
-        st.warning(
-            "No resources match your filters. Try: clear the keyword to browse by "
-            'category only; set category to **All**; use a shorter or broader term '
-            "(e.g. “print”, “study”, “bike”); or search for a tag like **wifi** or **laser**."
+        st.info(
+            "No resources match these filters. Try clearing the keyword, setting category to **All**, "
+            "or shorter terms like **print**, **study**, **bike**, or a tag such as **wifi**."
         )
     else:
         for resource in results:
+            tags_obj = resource["tags"]
+            assert isinstance(tags_obj, list)
+            contact = resource["contact"]
+            contact_line = str(contact) if contact is not None else "Not listed"
+            tags_display = ", ".join(str(t) for t in tags_obj)
+            tags_html = "".join(
+                f'<span class="wf-tag">{html.escape(str(t))}</span>' for t in tags_obj
+            )
+
             with st.container(border=True):
+                st.markdown(
+                    f'<span class="wf-cat">{html.escape(str(resource["category"]))}</span>',
+                    unsafe_allow_html=True,
+                )
                 st.subheader(str(resource["name"]))
-                st.caption(f"{resource['category']} · {resource['location']}")
-                st.write(str(resource["description"]))
+                st.markdown(
+                    f'<p class="wf-loc">📍 {html.escape(str(resource["location"]))}</p>',
+                    unsafe_allow_html=True,
+                )
+                st.markdown(
+                    f'<p class="wf-desc">{html.escape(str(resource["description"]))}</p>',
+                    unsafe_allow_html=True,
+                )
+                st.markdown(f'<div class="wf-tags">{tags_html}</div>', unsafe_allow_html=True)
 
-                contact = resource["contact"]
-                contact_line = str(contact) if contact is not None else "Not listed"
-                tags_obj = resource["tags"]
-                assert isinstance(tags_obj, list)
-                tags_display = ", ".join(str(t) for t in tags_obj)
+                chk_key = _resource_map_widget_key(resource)
+                if st.checkbox("Show location on map", key=chk_key):
+                    _render_resource_map(resource)
 
-                with st.expander("Details"):
-                    st.markdown(f"**Hours**  \n{resource['hours']}")
-                    st.markdown(f"**Access**  \n{resource['access']}")
-                    st.markdown(f"**Contact**  \n{contact_line}")
-                    st.markdown(f"**Tags**  \n{tags_display}")
+                with st.expander("Hours, access & contact"):
+                    d1, d2 = st.columns(2, gap="large")
+                    with d1:
+                        st.markdown("**Hours**")
+                        st.write(str(resource["hours"]))
+                        st.markdown("**Access**")
+                        st.write(str(resource["access"]))
+                    with d2:
+                        st.markdown("**Contact**")
+                        st.write(contact_line)
+                        st.markdown("**Tags**")
+                        st.caption(tags_display)
 
-    st.caption("Data maintained by GIX Student Services.")
+    st.markdown(
+        '<p class="wf-footer">Data maintained by GIX Student Services.</p>',
+        unsafe_allow_html=True,
+    )
 
 
 if __name__ == "__main__":

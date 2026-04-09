@@ -1,0 +1,50 @@
+---
+description: Lab 1 Streamlit (ProcureGIX + Wayfinder) — Python 3.11+ and Streamlit conventions
+globs: Lab 1/**/*.py
+alwaysApply: false
+---
+
+# Lab 1 — Streamlit (Python 3.11+)
+
+## Apps
+- **ProcureGIX:** entry `Lab 1/app.py`; orchestration `Lab 1/procuregix/main.py`; UI under `procuregix/ui/{student,teacher,admin}/`; DB `Lab 1/db.py` + SQLite (gitignored).
+- **Wayfinder:** entry `Lab 1/Wayfinder/app.py`; co-located helpers (e.g. `search_heading.py`); theme `Lab 1/Wayfinder/.streamlit/config.toml`.
+
+## Python
+- Use 3.11+ syntax (`list[str]`, `str | None`, `X | Y` unions).
+- Type hints on public APIs and non-trivial helpers; return types when not obvious.
+- Docstrings (Google style) for non-trivial functions; skip noise on trivial getters.
+- Descriptive names; single-letter only for tight loops.
+- Prefer focused functions; extract helpers past ~30–40 lines or multiple responsibilities.
+
+## Streamlit
+- Call `st.set_page_config()` once at the top of each app entry file, before other `st.*` calls.
+- Sidebar for filters / role selection when it matches existing patterns; main area for primary content.
+- Use `st.cache_data` / `st.cache_resource` for expensive, deterministic work; invalidate or avoid caching when data must be fresh.
+- User-facing issues: `st.error` / `st.warning` / `st.info`. Log with `logging` for server diagnostics. No bare `except:`; catch specific exceptions.
+- `st.markdown(..., unsafe_allow_html=True)`: escape user-controlled text with `html.escape`; keep HTML/CSS small; avoid inline JS unless necessary.
+
+## Structure
+- Do not invent a flat `utils.py` at repo root if the app already lives under `procuregix/` or `Wayfinder/`.
+- Shared deps: `Lab 1/requirements.txt`.
+
+## Charts & maps
+- Follow existing patterns in each app (`st.map`, tables, metrics).
+- New interactive charts: prefer **Plotly** unless the file already standardizes on something else. Include title, axis labels, legend.
+- Colors: align with UW theme in `.streamlit/config.toml` (e.g. primary `#4B2E83`, text `#2A1F3D`) rather than default tab10 unless a lab explicitly requires a fixed palette.
+
+## Examples
+```python
+# ✅ GOOD — specific catch + user message
+try:
+    rows = fetch_rows()
+except sqlite3.Error as e:
+    logging.exception("db fetch failed")
+    st.error("Could not load data. Try again.")
+
+# ❌ BAD
+try:
+    rows = fetch_rows()
+except Exception:
+    pass
+```
