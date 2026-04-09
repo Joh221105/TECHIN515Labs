@@ -1,6 +1,6 @@
-# TECHIN515 Labs
+# TECHIN510 Labs
 
-Course lab work for TECHIN515.
+Course lab work for TECHIN510.
 
 ## Lab 1
 
