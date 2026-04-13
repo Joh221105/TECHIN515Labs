@@ -1,0 +1,25 @@
+# GIX Career Eligibility Checker — AI coding rules
+
+## Scope
+- Implement only the Quick Eligibility Checker described in `SPEC.md` in this folder.
+- Do not add backends, auth, databases, or calls to external APIs unless the user explicitly asks.
+
+## Correctness
+- Encode eligibility exactly as in `SPEC.md`; use pure functions and exhaustive `switch` or lookup tables.
+- Map UI labels to internal enums consistently; document the mapping in a single module or comment block.
+
+## UX
+- One screen: three inputs, submit, results for four services (mock interviews, resume reviews, employer panels, networking nights)—table or card list is fine.
+- Show distinct states: eligible, not eligible, eligible pending verification, human review required.
+- Always show a one-line reason per service. Use a visible banner (not footnote-only text) for human review and pending verification.
+
+## Robustness
+- Invalid or incomplete input must show inline validation messages and must not throw uncaught errors or white-screen the app.
+- Disable or guard submit until required fields are selected, or validate on submit without crashing.
+
+## Code quality
+- TypeScript for React apps (Next or Vite); separate `eligibility.ts` (or equivalent) from UI components.
+- Prefer accessible form controls: `<label>` for every input, sufficient color contrast, focus styles.
+
+## Testing mindset
+- Add a short comment or README note listing 2–3 example tuples (inputs → expected top-level outcome) for manual smoke testing.

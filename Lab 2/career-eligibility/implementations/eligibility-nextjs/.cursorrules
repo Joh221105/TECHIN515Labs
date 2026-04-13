@@ -1,0 +1,27 @@
+# GIX Quick Eligibility Checker — Next.js (this app)
+
+## Spec
+- Functional source of truth: `../../SPEC.md` (relative to this folder).
+- Do not change business rules without updating that spec and the paired Vite app’s `src/eligibility.ts`.
+
+## Scope
+- This package is only the Next.js 15 App Router UI for the checker: no backend, auth, DB, or external APIs unless explicitly requested.
+
+## Correctness
+- Keep all eligibility logic in `src/lib/eligibility.ts` (pure functions, exhaustive `switch` where appropriate).
+- UI maps `<select>` values to the typed enums in that module; do not duplicate rule branches in `page.tsx`.
+
+## UX
+- One route (`src/app/page.tsx`): three required inputs, submit, results **table** with four rows (mock interviews, resume reviews, employer panels, networking nights).
+- Surface: eligible, not eligible, eligible pending verification, human review required; each row needs a short reason string.
+- Use visible banners (Tailwind) for global pending/human-review messages and resume human-review banner when the spec requires it.
+
+## Stack conventions
+- TypeScript, Tailwind CSS 4 (`globals.css` + `@import "tailwindcss"`).
+- Client interactivity: `"use client"` on the page component; keep `layout.tsx` as server default unless you need otherwise.
+
+## Robustness
+- Incomplete submit: inline validation, no uncaught throws, no blank screen.
+
+## Testing
+- After rule changes, note 1–2 manual tuples (inputs → expected status) in a comment near `evaluateEligibility` or in README.

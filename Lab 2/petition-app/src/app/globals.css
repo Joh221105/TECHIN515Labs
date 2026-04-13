@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+@layer components {
+  .page-container {
+    @apply mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8;
+  }
+
+  .surface-card {
+    @apply rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/5;
+  }
+
+  .surface-muted {
+    @apply rounded-xl border border-slate-200/80 bg-slate-50/90;
+  }
+
+  .section-label {
+    @apply text-[11px] font-semibold uppercase tracking-wider text-slate-500;
+  }
+
+  .link-default {
+    @apply font-medium text-indigo-600 transition-colors hover:text-indigo-800;
+  }
+
+  .link-danger {
+    @apply font-medium text-rose-600 transition-colors hover:text-rose-800;
+  }
+
+  .spreadsheet-input {
+    @apply rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-inner shadow-slate-950/5 transition-[box-shadow,border-color];
+  }
+
+  .spreadsheet-input::placeholder {
+    @apply text-slate-400;
+  }
+
+  .spreadsheet-input:focus {
+    @apply border-indigo-400 outline-none ring-2 ring-indigo-500/20;
+  }
+
+  .btn-primary {
+    @apply rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm shadow-indigo-900/20 transition-colors hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2;
+  }
+
+  .btn-primary:disabled {
+    @apply cursor-not-allowed opacity-55 shadow-none;
+  }
+
+  .btn-secondary {
+    @apply rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-[background-color,border-color,box-shadow] hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30 focus-visible:ring-offset-2;
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    @apply bg-slate-50;
+  }
+
+  .btn-ghost {
+    @apply rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900;
+  }
+
+  .alert-error {
+    @apply rounded-xl border border-rose-200/90 bg-rose-50 px-4 py-3 text-sm text-rose-900;
+  }
+
+  .alert-warn {
+    @apply rounded-xl border border-amber-200/90 bg-amber-50 px-4 py-3 text-sm text-amber-950;
+  }
+
+  .alert-info {
+    @apply rounded-xl border border-sky-200/90 bg-sky-50 px-4 py-3 text-sm text-sky-950;
+  }
+
+  .alert-success {
+    @apply rounded-xl border border-emerald-200/90 bg-emerald-50 px-4 py-3 text-sm text-emerald-950;
+  }
+}
